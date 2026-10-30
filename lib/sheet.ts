@@ -142,6 +142,15 @@ function parseSleep(records: Record<string, string>[]): SleepRow[] {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** "leg_raise" / "pushups" -> "Leg Raise" / "Pushups" for display. */
+function prettyExercise(raw: string): string {
+  return raw
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function parseLifts(records: Record<string, string>[]): LiftRow[] {
   return records
     .map((r): LiftRow | null => {
@@ -151,7 +160,7 @@ function parseLifts(records: Record<string, string>[]): LiftRow[] {
       return {
         timestamp: ts,
         date: isoDate(ts),
-        exercise: exercise || "Unknown",
+        exercise: exercise ? prettyExercise(exercise) : "Unknown",
         weightKg: toNum(pick(r, "Weight (kg)", "Weight", "Weight(kg)")),
         reps: toNum(pick(r, "Reps", "Rep")),
         durationS: toNum(pick(r, "Duration (s)", "Duration", "Duration(s)")),
