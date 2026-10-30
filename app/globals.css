@@ -1,0 +1,362 @@
+:root {
+  /* surfaces */
+  --bg: #07070d;
+  --bg-grad-1: #0d0b1a;
+  --bg-grad-2: #07070d;
+  --panel: #12121d;
+  --panel-2: #181826;
+  --border: #262636;
+  --border-glow: #3a2f5c;
+
+  /* text */
+  --text: #ecebf5;
+  --text-dim: #a3a1b8;
+  --text-faint: #6b6980;
+
+  /* brand / accents (consistent categorical system) */
+  --cyan: #22d3ee;
+  --violet: #a78bfa;
+  --magenta: #f472b6;
+  --amber: #fbbf24;
+  --lime: #a3e635;
+
+  /* semantic */
+  --good: #4ade80;
+  --bad: #fb7185;
+  --neutral: #8b93c9;
+
+  /* chart tokens */
+  --grid: #20202e;
+  --dot: #4b4b63;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --maxw: 1100px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #1b1340 0%, transparent 55%),
+    radial-gradient(900px 500px at -10% 10%, #10233a 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg-grad-1), var(--bg-grad-2));
+  background-attachment: fixed;
+  color: var(--text);
+  font-family:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 16px 80px;
+}
+
+/* ---- top bar / nav ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  background: rgba(7, 7, 13, 0.7);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.nav a {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.nav a:hover {
+  color: var(--text);
+  background: var(--panel-2);
+  text-decoration: none;
+  border-color: var(--border);
+}
+
+/* ---- hero ---- */
+.hero {
+  padding: 36px 0 10px;
+}
+.hero h1 {
+  font-size: clamp(28px, 6vw, 44px);
+  line-height: 1.05;
+  margin: 0 0 8px;
+  font-weight: 800;
+  background: linear-gradient(100deg, #fff 10%, var(--violet) 55%, var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p {
+  color: var(--text-dim);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ---- section ---- */
+.section {
+  margin-top: 44px;
+  scroll-margin-top: 72px;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.section-head h2 {
+  font-size: 20px;
+  margin: 0;
+  font-weight: 700;
+}
+.section-head .tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  font-weight: 700;
+}
+
+/* ---- cards & grid ---- */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.grid.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.grid.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 860px) {
+  .grid.cols-3,
+  .grid.cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .grid.cols-2,
+  .grid.cols-3,
+  .grid.cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.card.chart {
+  padding: 16px 12px 8px 4px;
+}
+.card .card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.card .card-sub {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+/* ---- stat / hero numbers ---- */
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat .label {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 700;
+}
+.stat .value {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.stat .value .unit {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-left: 3px;
+}
+.stat .sub {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---- delta pills ---- */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.delta.good {
+  color: var(--good);
+  background: rgba(74, 222, 128, 0.1);
+}
+.delta.bad {
+  color: var(--bad);
+  background: rgba(251, 113, 133, 0.1);
+}
+.delta.neutral {
+  color: var(--neutral);
+  background: rgba(139, 147, 201, 0.12);
+}
+
+/* ---- streak chips ---- */
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+.chip b {
+  color: var(--text);
+}
+
+/* ---- empty state ---- */
+.empty {
+  border: 1px dashed var(--border-glow);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  background: rgba(24, 24, 38, 0.4);
+}
+.empty .big {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.empty code {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--cyan);
+}
+
+/* ---- banner (sheet not public) ---- */
+.banner {
+  margin-top: 20px;
+  border: 1px solid #5b3b1f;
+  background: linear-gradient(180deg, #221708, #1a1206);
+  color: #fcd9a8;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  font-size: 14px;
+}
+.banner b {
+  color: #ffdfae;
+}
+
+/* ---- footer ---- */
+.footer {
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 11px;
+}
+.recharts-default-tooltip {
+  border-radius: 10px !important;
+}
