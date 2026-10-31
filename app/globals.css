@@ -631,3 +631,27 @@ a:hover {
   border-color: var(--cyan);
   color: var(--cyan);
 }
+
+/* ---------- owner sign-in control (header) ---------- */
+.auth-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 13px;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.auth-btn:hover {
+  color: var(--text);
+  border-color: var(--violet);
+}
+.auth-btn.is-in {
+  color: var(--violet);
+  border-color: var(--border-glow);
+}

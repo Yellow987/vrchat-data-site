@@ -1,6 +1,8 @@
+import AuthButton from "@/components/AuthButton";
 import BedtimeChart from "@/components/BedtimeChart";
 import DanceChart from "@/components/DanceChart";
 import LiftsChart from "@/components/LiftsChart";
+import PrivatePanel from "@/components/PrivatePanel";
 import ProgressGallery from "@/components/ProgressGallery";
 import SleepHrvScatter from "@/components/SleepHrvScatter";
 import TrendChart, { type ValueFormat } from "@/components/TrendChart";
@@ -58,6 +60,7 @@ export default async function Home() {
             <a href="#progress">Progress</a>
             <a href="#lifts">Lifts</a>
             <a href="#dance">Dance</a>
+            <AuthButton />
           </nav>
         </div>
       </header>
@@ -288,6 +291,11 @@ export default async function Home() {
             />
           )}
         </Section>
+
+        {/* ------------------------------------------------ PRIVATE (owner-only) */}
+        {/* Renders nothing unless the owner is signed in; data is fetched from
+            the auth-gated /api/private route, never baked into this page. */}
+        <PrivatePanel />
 
         <Footer data={data} />
       </main>

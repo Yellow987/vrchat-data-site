@@ -1,7 +1,14 @@
 // Server-side data layer: fetch each public worksheet as CSV, parse the text
 // formats, and hand back plain-serializable rows for the (client) charts.
 
-import { csvUrl, exportCsvUrl, PHOTOS_GID, REVALIDATE_SECONDS, TABS } from "./config";
+import {
+  csvUrl,
+  exportCsvUrl,
+  PHOTOS_GID,
+  PRIVATE_TAB,
+  REVALIDATE_SECONDS,
+  TABS,
+} from "./config";
 import {
   anchorBedtime,
   parseClock,
@@ -10,10 +17,12 @@ import {
   toNum,
   toRecords,
 } from "./parse";
+import { fetchSheetRows, hasServiceAccount, SheetApiError } from "./sheets-api";
 import type {
   DanceRow,
   LiftRow,
   PhotoRow,
+  PrivateData,
   SiteData,
   SleepRow,
   TabStatus,
@@ -51,9 +60,38 @@ async function fetchSample(tab: string): Promise<FetchResult> {
   }
 }
 
-async function fetchTab(tab: string, url: string = csvUrl(tab)): Promise<FetchResult> {
+/** Read a worksheet. Prefers the authenticated Sheets API (required once the
+ *  sheet is private); falls back to the public-CSV endpoint when no service
+ *  account is configured, so the site keeps working during the migration.
+ *  `csvFallbackUrl` only applies to the CSV path. */
+async function fetchTab(
+  tab: string,
+  csvFallbackUrl: string = csvUrl(tab),
+): Promise<FetchResult> {
   if (USE_SAMPLE) return fetchSample(tab);
+  if (hasServiceAccount()) return fetchViaApi(tab);
+  return fetchViaCsv(tab, csvFallbackUrl);
+}
 
+/** Authenticated read via the service account (works on a private sheet). */
+async function fetchViaApi(tab: string): Promise<FetchResult> {
+  try {
+    const rows = (await fetchSheetRows(tab)) ?? [];
+    const records = toRecords(rows);
+    if (records.length === 0) {
+      return { records, status: { ok: true, reason: "empty", rowCount: 0 } };
+    }
+    return { records, status: { ok: true, reason: "ok", rowCount: records.length } };
+  } catch (e) {
+    const reason: TabStatus["reason"] =
+      e instanceof SheetApiError ? e.kind : "error";
+    const message = e instanceof Error ? e.message : undefined;
+    return { records: [], status: { ok: false, reason, message, rowCount: 0 } };
+  }
+}
+
+/** Public-CSV read (no credentials). Used until the sheet is made private. */
+async function fetchViaCsv(tab: string, url: string): Promise<FetchResult> {
   const empty = (reason: TabStatus["reason"], message?: string): FetchResult => ({
     records: [],
     status: { ok: false, reason, message, rowCount: 0 },
@@ -269,6 +307,30 @@ export async function getSiteData(): Promise<SiteData> {
       photos: finalizeStatus(photosRes.status, photos.length),
     },
   };
+}
+
+/** The private worksheet, read only through the auth-gated API route. Columns
+ *  are auto-detected (same flexible scheme as Dance) so you can log whatever
+ *  numeric fields you like. Requires the service account — never served to an
+ *  unauthenticated request. */
+export async function getPrivateData(): Promise<PrivateData> {
+  if (!USE_SAMPLE && !hasServiceAccount()) {
+    return {
+      rows: [],
+      columns: [],
+      status: {
+        ok: false,
+        reason: "private",
+        message: "Private data needs the server credential (service account).",
+        rowCount: 0,
+      },
+    };
+  }
+  const res = USE_SAMPLE
+    ? await fetchSample(PRIVATE_TAB)
+    : await fetchViaApi(PRIVATE_TAB);
+  const { rows, columns } = parseDance(res.records);
+  return { rows, columns, status: finalizeStatus(res.status, rows.length) };
 }
 
 function finalizeStatus(status: TabStatus, parsedCount: number): TabStatus {

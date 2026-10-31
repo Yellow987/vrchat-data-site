@@ -12,6 +12,11 @@ export const TABS = {
   photos: process.env.NEXT_PUBLIC_PHOTOS_TAB || "Photos",
 } as const;
 
+/** The private worksheet (sensitive, owner-only metrics). Server-only — the
+ *  name is deliberately NOT a NEXT_PUBLIC var so it never ships to the client,
+ *  and its data is only ever served through the auth-gated /api/private route. */
+export const PRIVATE_TAB = process.env.PRIVATE_TAB || "Private";
+
 export const REVALIDATE_SECONDS = Number(
   process.env.SHEET_REVALIDATE_SECONDS || 3600,
 );

@@ -28,6 +28,9 @@ Built with **Next.js (App Router, TypeScript)** + **Recharts**, deployed to
 - **Dance / Cardio** — auto-detects whatever numeric columns the VR dance
   tracker writes (duration, active minutes, movement, HR) and charts each.
   Blank-friendly.
+- **Private (owner-only)** — a sign-in-gated section for sensitive metrics.
+  Invisible to everyone else (not just hidden in the UI — the data is never
+  sent to an unauthenticated request). See **Private metrics** below.
 
 Each section degrades gracefully: empty tabs, a missing worksheet, or an
 un-published sheet all show a helpful message instead of breaking.
@@ -73,6 +76,44 @@ on the next deploy / a manual refresh.
   date are fine. Written by the Last Meal app's "Add progress photo" flow.
 
 Column lookups are space/case-insensitive and tolerate a few header variants.
+
+---
+
+## Private metrics (owner-only)
+
+Some metrics are private. They live in the **same Google Sheet**, in a dedicated
+`Private` tab, but must never be visible to the public — so the whole sheet is
+made **private** and read a different way:
+
+- **Reads use a Google service account.** The server authenticates with a
+  service account (shared on the sheet as Viewer) via the Google Sheets API, so
+  the public sections keep working for anonymous visitors without exposing the
+  sheet. If no service-account credentials are configured, the code transparently
+  falls back to the old public-CSV path — which is what makes the migration
+  zero-downtime.
+- **The private section is gated by "Sign in with Google" (Auth.js),** locked to
+  a single account (`ALLOWED_EMAIL`). Everyone else is rejected at sign-in.
+- **The gate is server-side.** Private data is served only from the
+  `/api/private` route, which re-checks the session's email and is never cached.
+  It is never part of the public page's HTML, so there is nothing to "unhide" in
+  the browser. `PrivatePanel` renders nothing at all unless you're signed in.
+
+### Env vars (all server-only secrets — set in Vercel + `.env.local`)
+
+| Var | What |
+| --- | --- |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | The whole service-account key file (JSON, one line, or base64). Also accepts `GOOGLE_SA_EMAIL` + `GOOGLE_SA_PRIVATE_KEY`. |
+| `PRIVATE_TAB` | Private worksheet name (default `Private`). |
+| `AUTH_SECRET` | Random string (`npx auth secret`). |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | OAuth client (Web) credentials. |
+| `ALLOWED_EMAIL` | The one Google account allowed to see the private section. |
+
+OAuth redirect URIs to register: `http://localhost:3000/api/auth/callback/google`
+and `https://<your-domain>/api/auth/callback/google`.
+
+**Migration order (no downtime):** deploy with the service account configured →
+share the sheet with the service account → flip the sheet to private → add the
+auth vars + `Private` tab. The public site reads via the API the whole time.
 
 ---
 

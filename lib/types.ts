@@ -54,6 +54,15 @@ export interface PhotoRow {
   uploaded: string;
 }
 
+/** The private worksheet's parsed data. Shape mirrors the Dance tab
+ *  (auto-detected numeric columns) so the private metrics can be any columns
+ *  you log. Only ever returned from the auth-gated /api/private route. */
+export interface PrivateData {
+  rows: DanceRow[];
+  columns: string[];
+  status: TabStatus;
+}
+
 export interface SiteData {
   sleep: SleepRow[];
   lifts: LiftRow[];
