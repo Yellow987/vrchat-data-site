@@ -1,7 +1,7 @@
 // Server-side data layer: fetch each public worksheet as CSV, parse the text
 // formats, and hand back plain-serializable rows for the (client) charts.
 
-import { csvUrl, REVALIDATE_SECONDS, TABS } from "./config";
+import { csvUrl, exportCsvUrl, PHOTOS_GID, REVALIDATE_SECONDS, TABS } from "./config";
 import {
   anchorBedtime,
   parseClock,
@@ -51,7 +51,7 @@ async function fetchSample(tab: string): Promise<FetchResult> {
   }
 }
 
-async function fetchTab(tab: string): Promise<FetchResult> {
+async function fetchTab(tab: string, url: string = csvUrl(tab)): Promise<FetchResult> {
   if (USE_SAMPLE) return fetchSample(tab);
 
   const empty = (reason: TabStatus["reason"], message?: string): FetchResult => ({
@@ -61,7 +61,7 @@ async function fetchTab(tab: string): Promise<FetchResult> {
 
   let res: Response;
   try {
-    res = await fetch(csvUrl(tab), {
+    res = await fetch(url, {
       next: { revalidate: REVALIDATE_SECONDS },
       headers: { Accept: "text/csv,*/*" },
     });
@@ -247,7 +247,8 @@ export async function getSiteData(): Promise<SiteData> {
     fetchTab(TABS.sleep),
     fetchTab(TABS.lifts),
     fetchTab(TABS.dance),
-    fetchTab(TABS.photos),
+    // Photos go through the export-CSV endpoint: gviz blanks some text dates.
+    fetchTab(TABS.photos, exportCsvUrl(PHOTOS_GID)),
   ]);
 
   const sleep = parseSleep(sleepRes.records);

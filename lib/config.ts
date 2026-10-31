@@ -16,10 +16,22 @@ export const REVALIDATE_SECONDS = Number(
   process.env.SHEET_REVALIDATE_SECONDS || 3600,
 );
 
+/** Worksheet gid for the Photos tab (used by the export-CSV endpoint below). */
+export const PHOTOS_GID = process.env.NEXT_PUBLIC_PHOTOS_GID || "860276817";
+
 /** gviz CSV endpoint for a link-shareable sheet. Works without an API key. */
 export function csvUrl(tab: string): string {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
     tab,
+  )}`;
+}
+
+/** Export-CSV endpoint for a specific worksheet gid. Unlike gviz, this returns
+ *  cell values verbatim — gviz type-infers the Photos "Date" column and blanks
+ *  some text dates, which would silently drop photos. Used for the Photos tab. */
+export function exportCsvUrl(gid: string): string {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${encodeURIComponent(
+    gid,
   )}`;
 }
 

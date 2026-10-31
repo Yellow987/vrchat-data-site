@@ -166,8 +166,13 @@ export interface WeightPoint extends SleepPoint {
   photoThumb: string | null;
 }
 
-/** Snap a photo's date onto the nearest day present in the weight series so its
- *  marker can sit on the line even if that exact day has no sleep row. */
+/** How many days a photo may be from the nearest weight day and still get a
+ *  marker on the line. Beyond this it would misrepresent the photo's date, so
+ *  we drop the marker (the photo still shows in the Progress gallery). */
+const PHOTO_SNAP_DAYS = 3;
+
+/** Nearest day present in the weight series to `target`, or -1 if none is
+ *  within PHOTO_SNAP_DAYS. */
 function nearestIndex(dates: string[], target: string): number {
   let best = -1;
   let bestDiff = Infinity;
@@ -179,7 +184,21 @@ function nearestIndex(dates: string[], target: string): number {
       best = i;
     }
   }
+  if (best < 0 || bestDiff > PHOTO_SNAP_DAYS * 86400000) return -1;
   return best;
+}
+
+/** Nearest observed weight to index `i`, searching outward. Lets a photo on a
+ *  day with no weight (or too few neighbours for a rolling avg) still anchor its
+ *  marker to the line at a sensible height. */
+function nearestWeight(series: SleepPoint[], i: number): number | null {
+  for (let d = 0; d < series.length; d++) {
+    const a = series[i - d];
+    if (a && a.weight !== null) return a.weight;
+    const b = series[i + d];
+    if (b && b.weight !== null) return b.weight;
+  }
+  return null;
 }
 
 export function buildWeightSeries(
@@ -208,7 +227,7 @@ export function buildWeightSeries(
     if (pt.photoIndex === null) {
       pt.photoIndex = gi;
       pt.photoThumb = photo.imageUrl;
-      pt.photoY = pt.weight ?? pt.weightAvg ?? null;
+      pt.photoY = pt.weight ?? pt.weightAvg ?? nearestWeight(out, i);
     }
   });
   return out;
