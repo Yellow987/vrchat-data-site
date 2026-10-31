@@ -1,8 +1,10 @@
 import BedtimeChart from "@/components/BedtimeChart";
 import DanceChart from "@/components/DanceChart";
 import LiftsChart from "@/components/LiftsChart";
+import ProgressGallery from "@/components/ProgressGallery";
 import SleepHrvScatter from "@/components/SleepHrvScatter";
 import TrendChart, { type ValueFormat } from "@/components/TrendChart";
+import WeightChart from "@/components/WeightChart";
 import { REVALIDATE_SECONDS, sheetHumanUrl } from "@/lib/config";
 import {
   buildDeltas,
@@ -11,9 +13,9 @@ import {
   buildScatter,
   buildSleepSeries,
   buildStreaks,
+  buildWeightSeries,
   SLEEP_METRICS,
 } from "@/lib/metrics";
-import { PALETTE } from "@/lib/palette";
 import { getSiteData } from "@/lib/sheet";
 import type { SiteData, TabStatus } from "@/lib/types";
 
@@ -37,6 +39,8 @@ export default async function Home() {
   const streaks = buildStreaks(data.sleep);
   const scatter = buildScatter(data.sleep);
   const lifts = buildLiftSeries(data.lifts);
+  const weightSeries = buildWeightSeries(series, data.photos);
+  const hasPhotos = data.photos.length > 0;
 
   const sheetPrivate = data.status.sleep.reason === "private";
 
@@ -51,6 +55,7 @@ export default async function Home() {
           <nav className="nav">
             <a href="#sleep">Sleep</a>
             <a href="#body">Body</a>
+            <a href="#progress">Progress</a>
             <a href="#lifts">Lifts</a>
             <a href="#dance">Dance</a>
           </nav>
@@ -200,17 +205,12 @@ export default async function Home() {
             <div className="card chart">
               <div className="card-title">
                 <span>Body weight</span>
-                <span className="card-sub">daily · 7-day rolling avg · lb</span>
+                <span className="card-sub">
+                  daily · 7-day rolling avg · lb
+                  {hasPhotos ? " · 📷 = progress photo" : ""}
+                </span>
               </div>
-              <TrendChart
-                data={series}
-                dataKey="weight"
-                avgKey="weightAvg"
-                color={PALETTE.cyan}
-                unit="lb"
-                format="float"
-                height={240}
-              />
+              <WeightChart data={weightSeries} photos={data.photos} height={260} />
             </div>
           ) : (
             <StatusEmpty
@@ -218,6 +218,20 @@ export default async function Home() {
               title="No weight data yet"
               tab="Sleep"
               hint="Weight lives in the Sleep tab's Weight column."
+            />
+          )}
+        </Section>
+
+        {/* ------------------------------------------------ PROGRESS */}
+        <Section id="progress" title="Progress Photos" tag="self-captured">
+          {hasPhotos ? (
+            <ProgressGallery photos={data.photos} />
+          ) : (
+            <StatusEmpty
+              status={data.status.photos}
+              title="No progress photos yet"
+              tab="Photos"
+              hint="Add a progress photo (with its date) from the Last Meal app and it shows up here — on the weight line as a 📷 marker, and in a before/after comparison below."
             />
           )}
         </Section>

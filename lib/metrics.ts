@@ -10,7 +10,7 @@ import {
   weekDelta,
 } from "./parse";
 import { PALETTE } from "./palette";
-import type { LiftRow, SleepRow } from "./types";
+import type { LiftRow, PhotoRow, SleepRow } from "./types";
 
 export type Direction = "up-good" | "down-good" | "neutral";
 
@@ -149,6 +149,69 @@ export function buildSleepSeries(sleep: SleepRow[]): SleepPoint[] {
 
 function round(v: number | null): number | null {
   return v === null ? null : Math.round(v * 100) / 100;
+}
+
+// ---- progress photos on the weight line ----
+
+export interface WeightPoint extends SleepPoint {
+  /** y-position (weight, falling back to the rolling avg) for a photo marker, or
+   *  null when this day has no photo or no weight to anchor the dot to. */
+  photoY: number | null;
+  /** index into the chronologically-sorted photos array of the first photo on
+   *  this day — what the lightbox opens to when the marker is clicked. */
+  photoIndex: number | null;
+  /** how many photos map to this day. */
+  photoCount: number;
+  /** first photo's thumbnail url, for the hover preview. */
+  photoThumb: string | null;
+}
+
+/** Snap a photo's date onto the nearest day present in the weight series so its
+ *  marker can sit on the line even if that exact day has no sleep row. */
+function nearestIndex(dates: string[], target: string): number {
+  let best = -1;
+  let bestDiff = Infinity;
+  const t = Date.parse(target + "T00:00:00");
+  for (let i = 0; i < dates.length; i++) {
+    const diff = Math.abs(Date.parse(dates[i] + "T00:00:00") - t);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = i;
+    }
+  }
+  return best;
+}
+
+export function buildWeightSeries(
+  series: SleepPoint[],
+  photos: PhotoRow[],
+): WeightPoint[] {
+  const out: WeightPoint[] = series.map((p) => ({
+    ...p,
+    photoY: null,
+    photoIndex: null,
+    photoCount: 0,
+    photoThumb: null,
+  }));
+  if (out.length === 0) return out;
+
+  const dates = series.map((p) => p.date);
+  const exact = new Map(dates.map((d, i) => [d, i]));
+
+  photos.forEach((photo, gi) => {
+    const i = exact.has(photo.date)
+      ? (exact.get(photo.date) as number)
+      : nearestIndex(dates, photo.date);
+    if (i < 0) return;
+    const pt = out[i];
+    pt.photoCount += 1;
+    if (pt.photoIndex === null) {
+      pt.photoIndex = gi;
+      pt.photoThumb = photo.imageUrl;
+      pt.photoY = pt.weight ?? pt.weightAvg ?? null;
+    }
+  });
+  return out;
 }
 
 export interface DeltaCard {

@@ -41,16 +41,31 @@ export interface DanceRow {
   metrics: Record<string, number>;
 }
 
+export interface PhotoRow {
+  /** ISO date the photo was taken, YYYY-MM-DD. */
+  date: string;
+  /** Direct-embeddable image URL (Google Drive thumbnail link). */
+  imageUrl: string;
+  /** Drive file id — lets us build an alternate URL if the thumbnail host fails. */
+  fileId: string;
+  /** Optional caption. */
+  caption: string;
+  /** Raw upload timestamp text (tiebreaker for multiple photos on one date). */
+  uploaded: string;
+}
+
 export interface SiteData {
   sleep: SleepRow[];
   lifts: LiftRow[];
   dance: DanceRow[];
   danceColumns: string[];
+  photos: PhotoRow[];
   /** Per-tab fetch status so the UI can show helpful empty/error states. */
   status: {
     sleep: TabStatus;
     lifts: TabStatus;
     dance: TabStatus;
+    photos: TabStatus;
   };
 }
 

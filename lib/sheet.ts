@@ -13,6 +13,7 @@ import {
 import type {
   DanceRow,
   LiftRow,
+  PhotoRow,
   SiteData,
   SleepRow,
   TabStatus,
@@ -209,26 +210,62 @@ function parseDance(records: Record<string, string>[]): {
   return { rows, columns: metricCols };
 }
 
+/** Direct-embeddable Drive thumbnail URL from a file id. */
+function driveThumb(fileId: string): string {
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`;
+}
+
+function parsePhotos(records: Record<string, string>[]): PhotoRow[] {
+  return records
+    .map((r): PhotoRow | null => {
+      const dateText = pick(r, "Date", "Taken", "Day");
+      const fileId = pick(r, "FileId", "File Id", "FileID", "Drive Id");
+      let imageUrl = pick(r, "ImageURL", "Image URL", "URL", "Image", "Link");
+      if (!imageUrl && fileId) imageUrl = driveThumb(fileId);
+      // Need something to show and something to date it by.
+      if (!imageUrl || !dateText) return null;
+      return {
+        date: isoDate(dateText),
+        imageUrl,
+        fileId,
+        caption: pick(r, "Caption", "Note", "Label", "Title"),
+        uploaded: pick(r, "Uploaded", "Upload Time", "Timestamp", "Created"),
+      };
+    })
+    .filter((r): r is PhotoRow => r !== null)
+    // chronological; same-day photos ordered by upload time, then url for stability
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        a.uploaded.localeCompare(b.uploaded) ||
+        a.imageUrl.localeCompare(b.imageUrl),
+    );
+}
+
 export async function getSiteData(): Promise<SiteData> {
-  const [sleepRes, liftsRes, danceRes] = await Promise.all([
+  const [sleepRes, liftsRes, danceRes, photosRes] = await Promise.all([
     fetchTab(TABS.sleep),
     fetchTab(TABS.lifts),
     fetchTab(TABS.dance),
+    fetchTab(TABS.photos),
   ]);
 
   const sleep = parseSleep(sleepRes.records);
   const lifts = parseLifts(liftsRes.records);
   const { rows: dance, columns: danceColumns } = parseDance(danceRes.records);
+  const photos = parsePhotos(photosRes.records);
 
   return {
     sleep,
     lifts,
     dance,
     danceColumns,
+    photos,
     status: {
       sleep: finalizeStatus(sleepRes.status, sleep.length),
       lifts: finalizeStatus(liftsRes.status, lifts.length),
       dance: finalizeStatus(danceRes.status, dance.length),
+      photos: finalizeStatus(photosRes.status, photos.length),
     },
   };
 }

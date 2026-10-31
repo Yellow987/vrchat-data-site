@@ -9,6 +9,7 @@ export const TABS = {
   sleep: process.env.NEXT_PUBLIC_SLEEP_TAB || "Sleep",
   lifts: process.env.NEXT_PUBLIC_LIFTS_TAB || "Lifts",
   dance: process.env.NEXT_PUBLIC_DANCE_TAB || "Dance",
+  photos: process.env.NEXT_PUBLIC_PHOTOS_TAB || "Photos",
 } as const;
 
 export const REVALIDATE_SECONDS = Number(

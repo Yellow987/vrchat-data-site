@@ -16,7 +16,13 @@ Built with **Next.js (App Router, TypeScript)** + **Recharts**, deployed to
   pills, and trend lines (daily dots + 7-day rolling average) for HRV, sleep
   duration, onset HR, efficiency and score; bedtime-consistency band and a
   sleep↔HRV scatter.
-- **Body** — weight with a rolling average (day-to-day is noisy).
+- **Body** — weight with a rolling average (day-to-day is noisy). Days with a
+  progress photo get a 📷 marker on the line — hover for a thumbnail, click for
+  the full shot.
+- **Progress Photos** — a before/after comparison slider and a thumbnail
+  timeline. Photos (and their dates) are uploaded from the Last Meal app, which
+  appends them to the sheet's `Photos` tab. Blank-friendly until the first one
+  lands.
 - **Lifts** — best-set reps per exercise over time (fed by the LiftLog app).
   Blank-friendly until data lands.
 - **Dance / Cardio** — auto-detects whatever numeric columns the VR dance
@@ -61,6 +67,10 @@ on the next deploy / a manual refresh.
   (one row per set; the site shows best reps per exercise per day).
 - **Dance** — a date/timestamp column plus any numeric columns; they're
   auto-detected, so the exact headers can change without touching the code.
+- **Photos** — `Date` (YYYY-MM-DD the photo was taken), `ImageURL` (a
+  directly-embeddable image link), `FileId` (Drive id, used as a fallback URL),
+  `Caption` (optional), `Uploaded` (timestamp). Append-only; multiple photos per
+  date are fine. Written by the Last Meal app's "Add progress photo" flow.
 
 Column lookups are space/case-insensitive and tolerate a few header variants.
 
