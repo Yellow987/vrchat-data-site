@@ -37,6 +37,9 @@ export interface SleepPoint {
   onsetHrAvg: number | null;
   bedtimeMin: number | null;
   bedtimeAvg: number | null;
+  wakeMin: number | null;
+  wakeAvg: number | null;
+  wakeDerived: boolean;
   efficiency: number | null;
   efficiencyAvg: number | null;
   score: number | null;
@@ -123,6 +126,7 @@ export function buildSleepSeries(sleep: SleepRow[]): SleepPoint[] {
   const sleepMin = rollingMean(sleep.map((r) => r.sleepMin), 7);
   const onsetHr = rollingMean(sleep.map((r) => r.onsetHr), 7);
   const bedtime = rollingMean(sleep.map((r) => r.bedtimeMin), 7);
+  const wake = rollingMean(sleep.map((r) => r.wakeMin), 7);
   const eff = rollingMean(sleep.map((r) => r.efficiency), 7);
   const score = rollingMean(sleep.map((r) => r.score), 7);
   const weight = rollingMean(sleep.map((r) => r.weight), 7);
@@ -138,6 +142,9 @@ export function buildSleepSeries(sleep: SleepRow[]): SleepPoint[] {
     onsetHrAvg: round(onsetHr[i]),
     bedtimeMin: r.bedtimeMin,
     bedtimeAvg: round(bedtime[i]),
+    wakeMin: r.wakeMin,
+    wakeAvg: round(wake[i]),
+    wakeDerived: r.wakeDerived,
     efficiency: r.efficiency,
     efficiencyAvg: round(eff[i]),
     score: r.score,
@@ -149,6 +156,40 @@ export function buildSleepSeries(sleep: SleepRow[]): SleepPoint[] {
 
 function round(v: number | null): number | null {
   return v === null ? null : Math.round(v * 100) / 100;
+}
+
+function median(values: (number | null)[]): number | null {
+  const s = values
+    .filter((v): v is number => v !== null && Number.isFinite(v))
+    .sort((a, b) => a - b);
+  if (!s.length) return null;
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+/** A sleep/wake consistency band in anchored minutes: your own median time ±
+ *  a tolerance. This is computed from your data (Eight Sleep doesn't hand us a
+ *  personalized target), so it reflects your real routine rather than a generic
+ *  clock. */
+export interface ConsistencyBands {
+  bed: [number, number] | null;
+  wake: [number, number] | null;
+  /** True when wake is derived (bedtime + duration), not a real wake column. */
+  wakeDerived: boolean;
+}
+
+export const CONSISTENCY_TOL_MIN = 30;
+
+export function buildConsistencyBands(series: SleepPoint[]): ConsistencyBands {
+  const bedMed = median(series.map((p) => p.bedtimeMin));
+  const wakeMed = median(series.map((p) => p.wakeMin));
+  const tol = CONSISTENCY_TOL_MIN;
+  const anyRealWake = series.some((p) => p.wakeMin !== null && !p.wakeDerived);
+  return {
+    bed: bedMed === null ? null : [bedMed - tol, bedMed + tol],
+    wake: wakeMed === null ? null : [wakeMed - tol, wakeMed + tol],
+    wakeDerived: !anyRealWake,
+  };
 }
 
 // ---- progress photos on the weight line ----

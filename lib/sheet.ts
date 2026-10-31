@@ -164,17 +164,33 @@ function parseSleep(records: Record<string, string>[]): SleepRow[] {
       const dateText = pick(r, "Date");
       if (!dateText) return null;
       const bedtimeText = pick(r, "Bedtime") || null;
+      const bedtimeMin = anchorBedtime(parseClock(bedtimeText));
+      const sleepMin = parseDuration(pick(r, "Sleep", "Sleep Duration"));
+
+      // Wake time: prefer a real column; else derive from bedtime + duration.
+      // Kept as a plain morning clock (not night-anchored) so it plots below
+      // bedtime on the consistency chart.
+      const wakeText = pick(r, "Wake", "Wake Time", "Wake Up", "Wakeup", "Awake", "Out of Bed");
+      let wakeMin = parseClock(wakeText);
+      let wakeDerived = false;
+      if (wakeMin === null && bedtimeMin !== null && sleepMin !== null) {
+        wakeMin = (((bedtimeMin + sleepMin) % 1440) + 1440) % 1440;
+        wakeDerived = true;
+      }
+
       return {
         date: isoDate(dateText),
         bedtimeText,
-        bedtimeMin: anchorBedtime(parseClock(bedtimeText)),
-        sleepMin: parseDuration(pick(r, "Sleep", "Sleep Duration")),
+        bedtimeMin,
+        sleepMin,
         efficiency: toNum(pick(r, "Efficiency %", "Efficiency")),
         latency: toNum(pick(r, "Latency (min)", "Latency")),
         onsetHr: toNum(pick(r, "Onset HR", "OnsetHR", "HR")),
         hrv: toNum(pick(r, "HRV")),
         score: toNum(pick(r, "Score")),
         weight: toNum(pick(r, "Weight", "Weight (lb)")),
+        wakeMin,
+        wakeDerived,
       };
     })
     .filter((r): r is SleepRow => r !== null)

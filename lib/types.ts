@@ -19,6 +19,12 @@ export interface SleepRow {
   score: number | null;
   /** Body weight in lb (from Garmin). */
   weight: number | null;
+  /** Wake (out-of-bed) clock in minutes from midnight — a morning time, NOT
+   *  night-anchored. Read from a Wake column if present, else derived. */
+  wakeMin: number | null;
+  /** True when wakeMin was derived (bedtime + sleep duration) rather than read
+   *  from a real wake column. */
+  wakeDerived: boolean;
 }
 
 export interface LiftRow {

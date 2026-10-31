@@ -9,6 +9,7 @@ import TrendChart, { type ValueFormat } from "@/components/TrendChart";
 import WeightChart from "@/components/WeightChart";
 import { REVALIDATE_SECONDS, sheetHumanUrl } from "@/lib/config";
 import {
+  buildConsistencyBands,
   buildDeltas,
   buildHero,
   buildLiftSeries,
@@ -40,6 +41,7 @@ export default async function Home() {
   const deltas = buildDeltas(data.sleep);
   const streaks = buildStreaks(data.sleep);
   const scatter = buildScatter(data.sleep);
+  const bands = buildConsistencyBands(series);
   const lifts = buildLiftSeries(data.lifts);
   const weightSeries = buildWeightSeries(series, data.photos);
   const hasPhotos = data.photos.length > 0;
@@ -175,10 +177,18 @@ export default async function Home() {
               <div className="grid cols-2" style={{ marginTop: 16 }}>
                 <div className="card chart">
                   <div className="card-title">
-                    <span>Bedtime consistency</span>
-                    <span className="card-sub">asleep-clock vs 9:30–11pm band</span>
+                    <span>Sleep &amp; wake consistency</span>
+                    <span className="card-sub">
+                      asleep + wake vs your ±30-min bands
+                      {bands.wakeDerived ? " · wake est." : ""}
+                    </span>
                   </div>
-                  <BedtimeChart data={series} />
+                  <BedtimeChart
+                    data={series}
+                    bedBand={bands.bed}
+                    wakeBand={bands.wake}
+                    wakeDerived={bands.wakeDerived}
+                  />
                 </div>
                 <div className="card chart">
                   <div className="card-title">
